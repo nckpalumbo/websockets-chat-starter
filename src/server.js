@@ -53,20 +53,20 @@ const onMsg = (sock) => {
   const socket = sock;
 
     socket.on('msgToServer', (data) => {
-        if(data.msg == 6){
+        if(data.msg === 6){
             var randomNum = Math.floor(Math.random() * 6) + 1;
             io.sockets.in('room1').emit('msg', { name: data.name, msg: "I rolled a " + randomNum + "!" });
         }
-        else if(data.msg == 1){
+        else if(data.msg === 1){
             io.sockets.in('room1').emit('msg', { name: "Server", msg: data.name + " is doing the worm!"});
         }
-        else if(data.msg == 2){
+        else if(data.msg === 2){
             io.sockets.in('room1').emit('msg', { name: "Server", msg: data.name + " is dancing to disco!"});
         }
-        else if(data.msg == 3){
+        else if(data.msg === 3){
             io.sockets.in('room1').emit('msg', { name: "Server", msg: data.name + " is breakdancing!"});
         }
-        else if(data.msg == "Date"){
+        else if(data.msg === "Date"){
             var d = new Date().toLocaleDateString();
             socket.emit('msg', { name: data.name, msg: d});
         }
