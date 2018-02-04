@@ -1,16 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- import the websocket client library. You can code websockets from scratch
-         but we will just import a library. In this case we are using socket.io which is 
-         one of the most popular and feature rich websocket libraries.
-         
-         You can point the src for the script to any host online, but
-         by default the socket.io nodejs library will host the client library
-         online at your node.js address under /socket.io/socket.io.js 
-         You can disable that on the server if desired
-    -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/babel">
+        let user;
+        let socket;
+
+        const message = document.querySelector("#message");
+        const connectSocket = (e) => {
+            const chat = document.querySelector("#chat");
+            chat.innerHTML = "";
+            user = document.querySelector("#username").value;
+            
+            socket = io.connect();
+                        
+            socket.on('connect', () => {
+                console.log('Connecting...');
+                
+                if(!user) {
+                    user = 'unknown';
+                }
+                socket.emit('join', {name: user});
+            });
+            socket.on('msg', (data) => {
+                chat.innerHTML += data.name + ": " + data.msg + "\n";
+                //console.log(data);
+            });
+        };
+
+        const sendMessage = (e) => {
+            user = document.querySelector("#username").value;
+            let sentMsg;
+            
+            if(message.value == "!Date"){
+                sentMsg = {
+                    name: "Current Date",
+                    msg: "Date",
+                };
+            }
+            else if(message.value == "!Help"){
+                sentMsg = {
+                    name: "Server",
+                    msg: "Use !Date for current date. \nUse !Dance to dance. Use !Roll to roll a die. ",
+                };
+            }
+            else if(message.value == "!Dance"){
+                var randomNum = Math.floor(Math.random() * 3) + 1;
+                sentMsg = {
+                    name: user,
+                    msg: randomNum,
+                };
+            }
+            else if(message.value == "!Roll"){
+                sentMsg = {
+                    name: user,
+                    msg: 6,
+                };
+            }
+            
+            else{
+                sentMsg = {
+                    name: user,
+                    msg: message.value,
+                };
+            }
+            
+            socket.emit('msgToServer', sentMsg);
+            message.value = "";
+            
+        };
+
+        const disconnectSocket = (e) => {
+            user = document.querySelector("#username").value;
+            
+            console.log("Disconnecting...");
+            socket.emit('dcMsg', {name: "Server", msg: user + " has left the room."});
+            chat.innerHTML = "Server: You have left the room. ";
+            
+            socket.emit('disconnect'); 
+            socket.disconnect();
+            
+            document.querySelector("#username").value = "";
+        };        
+
+        const init = () => {
+            const connect = document.querySelector("#connect");
+            connect.addEventListener('click', connectSocket);
+            
+            const disconnect = document.querySelector("#disconnect");
+            disconnect.addEventListener('click', disconnectSocket);
+            
+            const send = document.querySelector("#send");
+            send.addEventListener('click', sendMessage);
+            
+        };
+
+        window.onload = init;
+    </script>
 	<style>
 		textarea {
 			display: block;
@@ -22,11 +109,12 @@
 	<label for="user">Username:</label>
 	<input id="username" name="user" type="text"/>
 	<input id="connect" type='button' value='connect'/>
+    <input id="disconnect" type='button' value='disconnect'/>
 	<br/>
 	<label for="message">Message:</label>
 	<input id="message" name="message" type="text"/>
 	<input id="send" type="button" value="send" />
 	
-	<textarea id="chat" rows="20" cols="40" readonly> </textarea>
+	<textarea id="chat" rows="20" cols="60" readonly> </textarea>
 </body>
 </html>
